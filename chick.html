@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Hot Chicks — Order Tracker</title>
+	<meta name="description" content="order tracker for the Hot Chicks food stall." />
+	<style>
+		:root{
+			--hc-red:#d9162b;
+			--hc-red-700:#b71125;
+			--hc-yellow:#ffd166;
+			--hc-yellow-700:#f7c23e;
+			--bg:#fff8ef;
+			--card:#ffffff;
+			--text:#1c1c1c;
+			--muted:#5f5f5f;
+			--border:#efd6a8;
+			--shadow:0 8px 22px rgba(0,0,0,.08);
+			--radius:16px;
+		}
+		*{box-sizing:border-box}
+		html,body{height:100%}
+		body{
+			margin:0;
+			font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+			color:var(--text);
+			background:radial-gradient(1000px 1000px at 100% -10%, rgba(255,209,102,.18), rgba(255,209,102,0) 60%),
+								 radial-gradient(1000px 1000px at -10% 110%, rgba(217,22,43,.12), rgba(217,22,43,0) 60%),
+								 var(--bg);
+		}
+		.container{max-width:1180px;margin-inline:auto;padding:26px 18px 48px}
+
+		header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+		.brand{display:flex;align-items:center;gap:12px}
+		.logo-frame{width:58px;height:58px;border-radius:14px;display:grid;place-items:center;background:#fff;border:3px solid var(--hc-yellow);box-shadow:var(--shadow);overflow:hidden}
+		.logo-img{width:100%;height:100%;object-fit:cover;display:none}
+		.logo-fallback{width:100%;height:100%;display:grid;place-items:center;background:conic-gradient(from 180deg at 50% 50%, var(--hc-red) 0 50%, var(--hc-yellow) 50% 100%);color:#fff;font-weight:900;font-size:1rem}
+		h1{margin:0;font-size:clamp(1.4rem,1.1rem+1vw,2rem)}
+		.subtitle{color:var(--muted)}
+		.actions{display:flex;gap:10px;flex-wrap:wrap}
+		.btn{appearance:none;border:none;cursor:pointer;padding:12px 16px;border-radius:999px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:transform .12s ease, filter .12s ease, box-shadow .15s ease}
+		.btn:active{transform:translateY(1px)}
+		.btn-primary{background:linear-gradient(135deg,var(--hc-red),var(--hc-red-700));color:#fff;box-shadow:0 10px 22px rgba(217,22,43,.28)}
+		.btn-primary:hover{filter:brightness(1.05)}
+		.btn-secondary{background:linear-gradient(135deg,var(--hc-yellow),var(--hc-yellow-700));color:#612500;box-shadow:0 10px 22px rgba(255,209,102,.35)}
+		.btn-secondary:hover{filter:brightness(1.03)}
+        .btn-sm{padding:6px 10px;font-size:.9rem;border-radius:12px}
+        .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fffef8;color:#6b4b00}
+
+		.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
+		@media (max-width: 960px){.grid{grid-template-columns:1fr}}
+
+		.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+		.card h2{margin:0 0 14px;font-size:1.1rem}
+		.muted{color:var(--muted)}
+
+		label{display:block;font-weight:600;margin-bottom:6px}
+		input[type="text"]{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;outline:none;transition:box-shadow .15s ease,border-color .15s ease}
+		input[type="text"]:focus{border-color:var(--hc-red);box-shadow:0 0 0 4px rgba(217,22,43,.15)}
+
+		form .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+		@media (max-width: 640px){form .row{grid-template-columns:1fr}}
+
+			.category{margin-top:12px}
+		.category h3{margin:8px 0 10px;font-size:1rem;color:#3a3a3a}
+		.checks{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+		.paychecks{grid-template-columns:repeat(2, minmax(120px, 1fr))}
+		@media (max-width: 800px){.checks{grid-template-columns:1fr}}
+		.check{
+			display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease
+		}
+		.check:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--hc-yellow)}
+		.check input{accent-color:var(--hc-red)}
+			.price-tag{margin-left:auto;font-weight:700;color:#8a1d1d;background:rgba(217,22,43,.08);padding:2px 8px;border-radius:999px;border:1px solid rgba(217,22,43,.18)}
+
+		.table-wrap{overflow:auto;border-radius:12px;border:1px solid var(--border)}
+		table{width:100%;border-collapse:separate;border-spacing:0;min-width:780px;background:#fff}
+		thead th{position:sticky;top:0;background:linear-gradient(#fff,#fffef8);z-index:1}
+		th,td{padding:12px;border-bottom:1px solid var(--border);text-align:left}
+		tbody tr:hover{background:#fff9ef}
+		tbody tr td:first-child{font-weight:700}
+
+		.stats{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px}
+		@media (max-width: 640px){.stats{grid-template-columns:1fr}}
+		.stat{background:linear-gradient(180deg,#fff,#fffdf8);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+		.stat .label{color:#6b6b6b;font-size:.9rem}
+		.stat .value{font-weight:900;font-size:clamp(1.4rem,1.1rem+1vw,1.8rem)}
+
+		/* Bar chart */
+		.bar-chart{margin-top:12px;display:grid;gap:8px}
+		.bar{display:flex;align-items:center;gap:10px}
+		.bar-label{flex:0 0 240px;max-width:40ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#454545}
+		.bar-track{flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;height:14px}
+		.bar-fill{height:100%;background:linear-gradient(90deg,var(--hc-yellow),var(--hc-red));width:0}
+		.bar-value{flex:0 0 auto;width:64px;text-align:right;font-weight:700}
+
+		.status{margin-top:8px;font-size:.95rem}
+		.status.ok{color:#12824d}
+		.status.warn{color:#935e00}
+		.status.err{color:#b00020}
+
+		footer{margin-top:18px;color:#6b6b6b;font-size:.92rem}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header>
+			<div class="brand">
+				<div class="logo-frame" aria-hidden="true">
+					<img id="logoImg" src="logo.png" alt="Hot Chicks logo" class="logo-img" />
+					<div id="logoFallback" class="logo-fallback">HC</div>
+				</div>
+				<div>
+					<h1>Hot Chicks — Order Tracker</h1>
+					<div class="subtitle">Fast, offline-friendly order taking</div>
+				</div>
+			</div>
+			<div class="actions">
+				<span id="autoSaveStatus" class="chip" title="Auto-save status">Auto-Save: Off</span>
+				<button id="autoSaveBtn" class="btn btn-primary" type="button" title="Automatically append each order to a CSV file">Enable Auto-Save</button>
+				<button id="downloadBtn" class="btn btn-secondary" type="button">Download CSV</button>
+				<button id="clearAllBtn" class="btn btn-primary" type="button" title="Remove all saved orders">Clear All</button>
+			</div>
+		</header>
+
+		<section class="grid">
+			<div class="card">
+				<h2>Add New Order</h2>
+				<form id="orderForm" novalidate>
+					<div class="row">
+						<div>
+							<label for="customerName">Customer Name</label>
+							<input id="customerName" type="text" placeholder="e.g., Anna" required />
+						</div>
+						<div>
+							<label for="vhId">VH ID</label>
+							<input id="vhId" type="text" placeholder="e.g., VH-23" required />
+						</div>
+					</div>
+
+							<div class="row" style="margin-top:8px">
+								<div>
+									<label for="dept">Department (optional)</label>
+									<input id="dept" type="text" placeholder="e.g., CSE / Sales / Admin" />
+								</div>
+							</div>
+
+					<!-- Categories with checkboxes -->
+					<div id="menuRoot"></div>
+
+								<!-- Payment Method -->
+								<div class="category">
+									<h3>Payment Method</h3>
+									<div class="checks paychecks" role="radiogroup" aria-label="Payment Method">
+										<label class="check" for="pay_cash">
+											<input type="radio" id="pay_cash" name="payment" value="Cash" checked>
+											<span>Cash</span>
+										</label>
+										<label class="check" for="pay_gpay">
+											<input type="radio" id="pay_gpay" name="payment" value="GPay">
+											<span>GPay</span>
+										</label>
+									</div>
+								</div>
+
+					<div class="actions" style="margin-top:10px">
+						<button class="btn btn-primary" type="submit">Add Order</button>
+					</div>
+
+					<div id="formStatus" class="status" aria-live="polite"></div>
+				</form>
+			</div>
+
+					<div class="card">
+						<h2>Current Selection</h2>
+						<div class="stats">
+							<div class="stat">
+								<div class="label">Items selected</div>
+								<div id="statSelectedCount" class="value">0</div>
+							</div>
+							<div class="stat">
+								<div class="label">Matched Combos</div>
+								<div id="statSelectedCombos" class="value" style="font-size:1.1rem">—</div>
+							</div>
+							<div class="stat">
+								<div class="label">Current Total</div>
+								<div id="selectionTotal" class="value">₹0</div>
+							</div>
+						</div>
+						<div class="muted" style="margin-top:8px">Totals update automatically as you check/uncheck items or combos.</div>
+					</div>
+		</section>
+
+			<section class="card" style="margin-top:18px">
+			<h2>All Orders</h2>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Serial No</th>
+							<th>Name</th>
+							<th>VH ID</th>
+							  <th>Orders</th>
+							  <th>Dept</th>
+							  <th>Payment</th>
+								<th>Total</th>
+							<th>Timestamp</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody id="ordersBody"></tbody>
+				</table>
+			</div>
+			<div style="margin-top:8px;color:#6b6b6b;font-size:.9rem">Rows update automatically when you add orders.</div>
+		</section>
+
+			<!-- Analytics below table per new requirements -->
+				<section class="card" style="margin-top:12px">
+				<h2>Analytics</h2>
+				<div class="stats">
+					<div class="stat">
+						<div class="label">Total Orders</div>
+						<div id="statTotal" class="value">0</div>
+					</div>
+					<div class="stat">
+						<div class="label">Most Ordered Item</div>
+						<div id="statMost" class="value">—</div>
+					</div>
+					<div class="stat">
+						<div class="label">Grand Total</div>
+						<div id="statGrand" class="value">₹0</div>
+					</div>
+						<div class="stat">
+							<div class="label">Total Sales (items)</div>
+							<div id="statSales" class="value">0</div>
+						</div>
+				</div>
+					<div class="bar-chart" id="barChart" aria-label="Items bar chart"></div>
+			</section>
+
+		<footer>
+			Developed by TEAM HOT CHICKS @copyrights 2025
+		</footer>
+	</div>
+
+	<script>
+			// ===== Configuration: Categories, Items, Prices, and Combos =====
+			// Price map (₹); items not listed default to 0 and should be updated.
+			// Assumptions (can adjust): Chicken Wings ₹89, Peri Peri Chicken Wings ₹99
+			const PRICES = {
+				// Loaded fries and mains
+				'Chicken Loaded Fries': 119,
+				'Classic Chicken Loaded Fries': 119,
+				'Chicken Cheese Loaded Fries': 139,
+				'Nugget Chicken Loaded Fries': 149,
+				'Chicken Burger': 75,
+				'Cheese Chicken Burger': 99,
+				'Chicken Nuggets': 50,
+				'Chicken Frankie': 60,
+				'Chicken Wings': 69, // assumed
+				'Peri Peri Chicken Wings': 79, // assumed
+				'Lays Chicken': 59,
+				'Chicken Popcorn': 69,
+				// Fries
+				'Classic Fries': 40,
+				'Peri Peri Fries': 50,
+				'Cheese Fries': 60,
+				'Mexican Fries': 60,
+				// Drinks
+				'Blue Curacao Mojito': 30,
+			};
+
+			// Combos: specify canonical item names and combo price
+			const COMBOS = [
+				{ key: 'cb_nug_moj', label: 'Chicken Burger + Chicken Nuggets + Mojito', items: ['Chicken Burger','Chicken Nuggets','Blue Curacao Mojito'], price: 149 },
+				{ key: 'cb_frank_moj', label: 'Chicken Burger + Chicken Frankie + Mojito', items: ['Chicken Burger','Chicken Frankie','Blue Curacao Mojito'], price: 159 },
+				{ key: 'cb_fries_moj', label: 'Chicken Burger + French Fries + Mojito', items: ['Chicken Burger','Classic Fries','Blue Curacao Mojito'], price: 139 },
+				{ key: 'cb_lays_moj', label: 'Chicken Burger + Lays Chicken + Mojito', items: ['Chicken Burger','Lays Chicken','Blue Curacao Mojito'], price: 159 },
+				{ key: 'cb_loaded_moj', label: 'Chicken Burger + Loaded Chicken + Mojito', items: ['Chicken Burger','Chicken Loaded Fries','Blue Curacao Mojito'], price: 219 },
+				{ key: 'loaded_wings_moj', label: 'Loaded + Chicken Wings + Mojito', items: ['Chicken Loaded Fries','Chicken Wings','Blue Curacao Mojito'], price: 189 }, // assumed
+				{ key: 'loaded_frank_moj', label: 'Loaded + Chicken Frankie + Mojito', items: ['Chicken Loaded Fries','Chicken Frankie','Blue Curacao Mojito'], price: 199 },
+				{ key: 'loaded_nug_moj', label: 'Loaded + Chicken Nuggets + Mojito', items: ['Chicken Loaded Fries','Chicken Nuggets','Blue Curacao Mojito'], price: 189 },
+			];
+
+			const MENU = [
+			{
+				key: 'main_course', label: 'Main Course', items: [
+						'Chicken Loaded Fries',
+					'Nugget Chicken Loaded Fries',
+					'Chicken Cheese Loaded Fries',
+					'Chicken Burger',
+					'Cheese Chicken Burger',
+					'Chicken Frankie',
+					'Chicken Wings',
+					'Peri Peri Chicken Wings',
+					'Lays Chicken',
+					'Chicken Nuggets',
+						'Chicken Popcorn',
+				]
+			},
+			{
+				key: 'fries', label: 'Fries', items: [
+					'Classic Fries',
+					'Peri Peri Fries',
+					'Cheese Fries',
+					'Mexican Fries',
+				]
+			},
+			{ key: 'mojito', label: 'Mojito', items: ['Blue Curacao Mojito'] },
+		];
+
+		// ===== Storage Layer (localStorage with fallback) =====
+		const STORAGE_KEY = 'hc_orders_v2';
+		let memoryOrders = [];
+		function storageAvailable(){
+			try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; } catch { return false; }
+		}
+		function loadOrders(){
+			if (storageAvailable()){
+				const raw = localStorage.getItem(STORAGE_KEY);
+				if (!raw) return [];
+				try { return JSON.parse(raw) || []; } catch { return []; }
+			}
+			return memoryOrders;
+		}
+		function saveOrders(orders){
+			if (storageAvailable()) localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+			else memoryOrders = orders;
+		}
+
+		// ===== Utilities =====
+		const $ = (id) => document.getElementById(id);
+		const nowIso = () => new Date().toISOString();
+		const fmt = (iso) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString(); };
+		function escCsv(v){
+			const s = String(v ?? '');
+			return (s.includes('"') || s.includes(',') || s.includes('\n')) ? '"' + s.replaceAll('"','""') + '"' : s;
+		}
+		function download(filename, text, type='text/plain'){
+			const blob = new Blob([text], { type });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+			requestAnimationFrame(()=>{ URL.revokeObjectURL(url); a.remove(); });
+		}
+
+		// ===== Rendering =====
+			function renderMenu(){
+			const root = $('menuRoot');
+			root.innerHTML = '';
+				// Combos section
+				const comboDiv = document.createElement('div');
+				comboDiv.className = 'category';
+				const comboTitle = document.createElement('h3');
+				comboTitle.textContent = 'Combos';
+				const comboChecks = document.createElement('div');
+				comboChecks.className = 'checks';
+				COMBOS.forEach((c, idx) => {
+					const id = `combo_${idx}`;
+					const label = document.createElement('label');
+					label.className = 'check';
+					label.setAttribute('for', id);
+					const input = document.createElement('input');
+					input.type = 'checkbox'; input.id = id; input.value = c.key; input.name = 'combo';
+					const span = document.createElement('span'); span.textContent = c.label;
+					const price = document.createElement('span'); price.className = 'price-tag'; price.textContent = `₹${c.price}`;
+					label.append(input, span, price);
+					comboChecks.appendChild(label);
+				});
+				comboDiv.append(comboTitle, comboChecks);
+				root.appendChild(comboDiv);
+
+				// Items by categories
+			MENU.forEach(cat => {
+				const catDiv = document.createElement('div');
+				catDiv.className = 'category';
+				const title = document.createElement('h3');
+				title.textContent = cat.label;
+				const checks = document.createElement('div');
+				checks.className = 'checks';
+				cat.items.forEach((item, idx) => {
+					const id = `${cat.key}_${idx}`;
+					const label = document.createElement('label');
+					label.className = 'check';
+					label.setAttribute('for', id);
+					const input = document.createElement('input');
+					input.type = 'checkbox';
+					input.id = id; input.value = item; input.name = 'dish';
+					const span = document.createElement('span');
+						span.textContent = item;
+						const price = document.createElement('span'); price.className = 'price-tag'; price.textContent = `₹${PRICES[item] ?? 0}`;
+						label.append(input, span, price);
+					checks.appendChild(label);
+				});
+				catDiv.append(title, checks);
+				root.appendChild(catDiv);
+			});
+		}
+
+			function renderTable(orders){
+			const body = $('ordersBody');
+			body.innerHTML = '';
+			orders.forEach((o, i) => {
+				const tr = document.createElement('tr');
+					const comboText = (o.combos && o.combos.length) ? o.combos.map(c=>`[Combo] ${c}`).join('; ') : '';
+					const items = o.items.join('; ');
+							const ordersText = [comboText, items].filter(Boolean).join(' ; ');
+							tr.innerHTML = `
+					<td>${i+1}</td>
+					<td>${o.name}</td>
+					<td>${o.vhId}</td>
+									<td>${ordersText}</td>
+									<td>${o.dept ? o.dept : '—'}</td>
+									<td>${o.payment ?? '—'}</td>
+						<td>₹${(o.total ?? computePriceFromItems(o.items)).toString()}</td>
+						<td>${fmt(o.timestamp)}</td>
+				`;
+					const actionsTd = document.createElement('td');
+					const delBtn = document.createElement('button');
+					delBtn.className = 'btn btn-secondary btn-sm';
+					delBtn.type = 'button';
+					delBtn.textContent = 'Delete';
+					delBtn.addEventListener('click', () => deleteOrder(i));
+					actionsTd.appendChild(delBtn);
+					tr.appendChild(actionsTd);
+				body.appendChild(tr);
+			});
+		}
+
+			function renderAnalytics(orders){
+				// Totals and counts
+				$('statTotal').textContent = String(orders.length);
+				const counts = new Map();
+				let grand = 0;
+					let totalSales = 0;
+				for (const o of orders){
+					// Expand combos into items for counting purposes
+					const expanded = new Set(o.items);
+					if (Array.isArray(o.combos)){
+						for (const cLabel of o.combos){
+							const combo = COMBOS.find(cc => cc.label === cLabel || cc.key === cLabel);
+							if (combo){ combo.items.forEach(it => expanded.add(it)); }
+						}
+					}
+						for (const it of expanded){ counts.set(it, (counts.get(it) || 0) + 1); totalSales += 1; }
+					grand += (o.total ?? computePriceFromItems(o.items));
+				}
+					$('statSales').textContent = String(totalSales);
+					const chart = document.getElementById('barChart');
+					chart.innerHTML = '';
+					if (counts.size === 0){ $('statMost').textContent = '—'; $('statGrand').textContent = '₹0'; return; }
+				let best = null, bestC = -1;
+				for (const [k, c] of counts){ if (c > bestC){ best = k; bestC = c; } }
+				$('statMost').textContent = `${best} (${bestC})`;
+				$('statGrand').textContent = `₹${grand}`;
+
+					// Render bars sorted by count desc (top 10)
+					const sorted = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,10);
+					const max = sorted[0]?.[1] || 1;
+					for (const [label, value] of sorted){
+						const row = document.createElement('div'); row.className = 'bar';
+						const l = document.createElement('div'); l.className = 'bar-label'; l.textContent = label;
+						const track = document.createElement('div'); track.className = 'bar-track';
+						const fill = document.createElement('div'); fill.className = 'bar-fill';
+						const pct = Math.max(2, Math.round((value/max)*100));
+						fill.style.width = pct + '%';
+						fill.setAttribute('aria-valuenow', String(value));
+						fill.setAttribute('aria-valuemin', '0');
+						fill.setAttribute('aria-valuemax', String(max));
+						track.appendChild(fill);
+						const v = document.createElement('div'); v.className = 'bar-value'; v.textContent = String(value);
+						row.append(l, track, v);
+						chart.appendChild(row);
+					}
+			}
+
+		function refresh(){
+			const orders = loadOrders();
+			renderTable(orders);
+			renderAnalytics(orders);
+		}
+
+		// ===== Actions =====
+			function selectedDishes(){
+			return Array.from(document.querySelectorAll('input[name="dish"]')).filter(i=>i.checked).map(i=>i.value);
+		}
+			function selectedCombosKeys(){
+				return Array.from(document.querySelectorAll('input[name="combo"]')).filter(i=>i.checked).map(i=>i.value);
+			}
+
+			// Calculate total considering selected combos and avoiding double-charge on overlapping items
+			function calculateSelectionTotal(){
+				const dishList = selectedDishes();
+				const comboKeys = selectedCombosKeys();
+				let total = 0;
+				const appliedCombos = [];
+				// Create a multiset of dishes (as a simple array we will remove items covered by combos)
+				let remaining = [...dishList];
+				for (const key of comboKeys){
+					const c = COMBOS.find(x => x.key === key);
+					if (!c) continue;
+					appliedCombos.push(c.label);
+					total += c.price;
+					// Remove combo items from remaining individual items to prevent double charge
+					c.items.forEach(ci => {
+						const idx = remaining.indexOf(ci);
+						if (idx !== -1) remaining.splice(idx,1);
+					});
+				}
+				// Price remaining individual items
+				for (const it of remaining){ total += PRICES[it] ?? 0; }
+				return { total, appliedCombos, remainingItems: remaining };
+			}
+
+			function updateSelectionStats(){
+				const { total, appliedCombos } = calculateSelectionTotal();
+				$('selectionTotal').textContent = `₹${total}`;
+				$('statSelectedCount').textContent = String(selectedDishes().length + selectedCombosKeys().length);
+				$('statSelectedCombos').textContent = appliedCombos.length ? appliedCombos.length.toString() : '—';
+			}
+		function setStatus(msg, type='ok'){
+			const box = $('formStatus');
+			box.className = `status ${type}`; box.textContent = msg;
+		}
+		function clearForm(){
+			$('orderForm').reset();
+			document.querySelectorAll('input[name="dish"]').forEach(i => i.checked = false);
+		}
+				function onSubmit(e){
+			e.preventDefault();
+			const name = $('customerName').value.trim();
+			const vhId = $('vhId').value.trim();
+				const items = selectedDishes();
+				const comboKeys = selectedCombosKeys();
+				const { total, appliedCombos } = calculateSelectionTotal();
+					const paymentInput = document.querySelector('input[name="payment"]:checked');
+					const payment = paymentInput ? paymentInput.value : '';
+					const dept = $('dept')?.value?.trim() || '';
+			if (!name){ setStatus('Please enter customer name.', 'err'); return; }
+			if (!vhId){ setStatus('Please enter VH ID.', 'err'); return; }
+				if (items.length === 0 && comboKeys.length === 0){ setStatus('Select at least one dish or combo.', 'warn'); return; }
+					if (!payment){ setStatus('Select payment method (Cash or GPay).', 'warn'); return; }
+			const orders = loadOrders();
+					const newOrder = { name, vhId, dept, items, combos: appliedCombos, total, payment, timestamp: nowIso() };
+					orders.push(newOrder);
+			saveOrders(orders);
+				appendOrderToCsv(newOrder);
+				refresh(); clearForm(); updateSelectionStats(); setStatus('Order added.', 'ok');
+		}
+		function onDownload(){
+			const orders = loadOrders();
+			if (orders.length === 0){ setStatus('No orders to export.', 'warn'); return; }
+								const header = ['Name','VH ID','Dept','Ordered Items','Payment','Order Total','Timestamp'];
+						const rows = orders.map((o)=>{
+					const comboText = (o.combos && o.combos.length) ? o.combos.map(c=>`[Combo] ${c}`).join('; ') : '';
+					const items = o.items.join('; ');
+					const ordersText = [comboText, items].filter(Boolean).join(' ; ');
+					const total = (o.total ?? computePriceFromItems(o.items));
+									return [o.name, o.vhId, (o.dept ?? ''), ordersText, (o.payment ?? ''), `₹${total}`, fmt(o.timestamp)];
+				});
+			const csv = [header, ...rows].map(r => r.map(escCsv).join(',')).join('\n');
+			const d = new Date(); const file = `hot-chicks-orders_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.csv`;
+			download(file, csv, 'text/csv');
+			setStatus('CSV downloaded.', 'ok');
+		}
+
+		// ===== Auto-Save CSV (optional, user-chosen file) =====
+			let autoSaveFileHandle = null;
+			let autoSaveColumns = { payment: true, dept: true }; // track if chosen file has columns
+		async function pickAutoSaveFile(){
+			if (!('showSaveFilePicker' in window)){
+				setStatus('Auto-Save needs a modern browser (File System Access API). Use Download CSV instead.', 'warn');
+				return;
+			}
+			try{
+				const d = new Date();
+				const name = `hot-chicks-autosave_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.csv`;
+				autoSaveFileHandle = await window.showSaveFilePicker({
+					suggestedName: name,
+					types: [{ description: 'CSV', accept: { 'text/csv': ['.csv'] } }]
+				});
+				// Write CSV header if file is empty
+				const stream = await autoSaveFileHandle.createWritable({ keepExistingData: true });
+				const file = await autoSaveFileHandle.getFile();
+							if (file.size === 0){
+								await stream.write('Name,VH ID,Dept,Ordered Items,Payment,Order Total,Timestamp\n');
+								autoSaveColumns = { payment: true, dept: true };
+							} else {
+								// Peek first bytes to detect presence of Dept/Payment columns (best-effort)
+								const text = await file.text();
+								const firstLine = (text.split(/\r?\n/)[0] || '').toLowerCase();
+								autoSaveColumns.payment = firstLine.includes('payment');
+								autoSaveColumns.dept = firstLine.includes('dept');
+							}
+				await stream.close();
+				updateAutoSaveBadge(true);
+				setStatus('Auto-Save enabled. New orders will be appended to CSV.', 'ok');
+			}catch(err){
+				autoSaveFileHandle = null;
+				updateAutoSaveBadge(false);
+				if (err && err.name !== 'AbortError') setStatus('Auto-Save not enabled.', 'warn');
+			}
+		}
+
+		function updateAutoSaveBadge(on){
+			const chip = $('autoSaveStatus');
+			chip.textContent = `Auto-Save: ${on ? 'On' : 'Off'}`;
+		}
+
+			async function appendOrderToCsv(order){
+			if (!autoSaveFileHandle) return;
+			try{
+				const stream = await autoSaveFileHandle.createWritable({ keepExistingData: true });
+				const comboText = (order.combos && order.combos.length) ? order.combos.map(c=>`[Combo] ${c}`).join('; ') : '';
+				const items = order.items.join('; ');
+				const ordersText = [comboText, items].filter(Boolean).join(' ; ');
+							const base = [order.name, order.vhId];
+							const cols = [];
+							if (autoSaveColumns.dept) cols.push(order.dept ?? '');
+							cols.push(ordersText);
+							if (autoSaveColumns.payment) cols.push(order.payment ?? '');
+							cols.push(`₹${order.total ?? computePriceFromItems(order.items)}`, fmt(order.timestamp));
+					const row = cols
+					.map(escCsv).join(',') + '\n';
+				await stream.write({ type:'seek', position: (await autoSaveFileHandle.getFile()).size });
+				await stream.write(row);
+				await stream.close();
+			}catch(err){
+				setStatus('Could not append to auto-save CSV. You may need to re-enable it.', 'warn');
+				autoSaveFileHandle = null;
+				updateAutoSaveBadge(false);
+			}
+		}
+
+		// Delete actions
+		function deleteOrder(index){
+			const orders = loadOrders();
+			if (index < 0 || index >= orders.length) return;
+			if (!confirm('Delete this order?')) return;
+			orders.splice(index, 1);
+			saveOrders(orders);
+			refresh();
+			setStatus('Order deleted.', 'ok');
+		}
+
+		function clearAll(){
+			const orders = loadOrders();
+			if (!orders.length){ setStatus('Nothing to clear.', 'warn'); return; }
+			if (!confirm('Clear all orders? This cannot be undone.')) return;
+			saveOrders([]);
+			refresh();
+			setStatus('All orders cleared.', 'ok');
+		}
+
+			// Legacy total computation from only items (no combos), used for older entries
+			function computePriceFromItems(items){
+				return (items || []).reduce((sum, it) => sum + (PRICES[it] ?? 0), 0);
+			}
+
+		// ===== Init =====
+		function init(){
+			renderMenu();
+					$('orderForm').addEventListener('submit', onSubmit);
+			$('downloadBtn').addEventListener('click', onDownload);
+			$('autoSaveBtn').addEventListener('click', pickAutoSaveFile);
+			$('clearAllBtn').addEventListener('click', clearAll);
+					// Update selection total on any change in menu
+					$('menuRoot').addEventListener('change', updateSelectionStats);
+			// Logo show/hide
+			const img = $('logoImg'); const fb = $('logoFallback');
+			const showImg = () => { img.style.display='block'; fb.style.display='none'; };
+			const showFallback = () => { img.style.display='none'; fb.style.display='grid'; };
+			if (img.complete){ img.naturalWidth>0 ? showImg() : showFallback(); }
+			else { img.addEventListener('load', showImg, { once:true }); img.addEventListener('error', showFallback, { once:true }); }
+					refresh();
+					updateSelectionStats();
+		}
+		document.addEventListener('DOMContentLoaded', init);
+	</script>
+</body>
+</html>
